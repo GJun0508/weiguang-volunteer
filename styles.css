@@ -26,3 +26,4 @@
 .hero-stats div{min-width:0}.hero-stats dt{font:500 clamp(31px,3.5vw,43px)/1.1 var(--serif);color:#edc892}.hero-stats dd{font-size:11px;color:rgba(251,248,241,.78);letter-spacing:.04em;margin:6px 0 0}
 @media(max-width:760px){.hero-copy{padding-top:clamp(206px,29vh,290px)}.hero-stats{gap:10px;margin-top:27px;padding-top:13px}.hero-stats dt{font-size:28px}.hero-stats dd{font-size:9px;line-height:1.35}.hero{min-height:735px}}
 @media(max-width:390px){.hero-copy{padding-top:28vh}.hero-stats{margin-top:21px}.hero-stats dt{font-size:25px}}
+@media(max-width:350px){.hero h1{font-size:37px}}
