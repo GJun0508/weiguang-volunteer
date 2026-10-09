@@ -49,8 +49,10 @@ class SiteTests(unittest.TestCase):
                 continue
             path = urlsplit(reference).path
             self.assertTrue((ROOT / path).is_file(), reference)
-        for photo in ('classroom-children.jpg', 'classroom-participation.jpg', 'teacher-classroom.jpg'):
-            self.assertTrue((ROOT / 'assets' / 'original-site' / photo).is_file())
+        for photo in ('china-reading.jpg', 'china-community.jpg'):
+            self.assertTrue((ROOT / 'assets' / photo).is_file())
+            self.assertIn('assets/' + photo, CSS)
+        self.assertTrue((ROOT / 'assets' / 'original-site' / 'teacher-classroom.jpg').is_file())
 
     def test_interaction_and_reduced_motion_are_available(self):
         for token in ('data-student-mode="gender"', 'data-progress-filter="confirmed"', 'data-support-path="materials"', 'id="share-site"'):
