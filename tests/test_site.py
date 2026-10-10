@@ -68,6 +68,52 @@ class SiteTests(unittest.TestCase):
         self.assertRegex(HTML, r'本网站目前不收款|当前状态：不收款')
         self.assertIn('非共和小学本次行动现场', HTML)
 
+    def test_published_urls_and_not_found_page_match_repository(self):
+        site_url = 'https://gjun0508.github.io/weiguang-volunteer/'
+        self.assertIn(f'<link rel="canonical" href="{site_url}">', HTML)
+        self.assertIn(f'<meta property="og:url" content="{site_url}">', HTML)
+        self.assertIn(site_url, (ROOT / 'sitemap-0.xml').read_text())
+        self.assertIn(site_url, (ROOT / 'robots.txt').read_text())
+        self.assertIn('/weiguang-volunteer/', (ROOT / '404.html').read_text())
+        self.assertIn('link[rel="canonical"]', SCRIPT)
+
+    def test_weekly_schedule_is_draft_and_interactive_for_grades_four_to_six(self):
+        self.assertIn('id="schedule"', HTML)
+        self.assertLess(HTML.index('id="schedule"'), HTML.index('id="action"'))
+        self.assertIn('课程筹备安排，具体以学校最终确认为准', HTML)
+        self.assertIn('课表仅列出四至六年级', HTML)
+        self.assertIn('暂无志愿课程安排', SCRIPT)
+        self.assertIn('data-schedule-day', HTML)
+        self.assertTrue('data-schedule-day="all"' in HTML, 'schedule should offer a full-week view')
+        self.assertIn('data-schedule-grade', HTML)
+        self.assertIn('scheduleData', SCRIPT)
+        self.assertIn('8:40–9:20', SCRIPT)
+        self.assertIn('14:10–14:50', SCRIPT)
+        self.assertIn('没有说明时间与节次口径的关系', HTML)
+        self.assertIn('上午 4 节、下午 2 节', HTML)
+        self.assertIn('上午 3 节、下午 3 节', HTML)
+        self.assertIn('周五下午', HTML)
+        self.assertIn('周五下午 · 走访贫困家庭', HTML)
+        for grade in ('四年级', '五年级', '六年级'):
+            self.assertIn(grade, HTML)
+        for course in ('科学课', '梦想课', '全球视野与思维拓展', '体育课', '美术课'):
+            self.assertIn(course, SCRIPT)
+
+    def test_blue_closing_is_limited_to_support_section(self):
+        self.assertIn('id="closing-title"', HTML)
+        self.assertIn('世界因你我更美好', HTML)
+        self.assertIn('Together, we make the world a better place.', HTML)
+        self.assertEqual(HTML.count('class="closing-char"'), 8)
+        self.assertIn('closing-character-in', CSS)
+        self.assertIn('assets/closing-sky.jpg', CSS)
+        self.assertIn('@media(prefers-reduced-motion:reduce)', CSS)
+        self.assertIn('--paper:#f6f1e9', CSS)
+        support_rules = list(re.finditer(r'\.support\s*\{([^}]*)\}', CSS))
+        self.assertTrue(support_rules)
+        support_rule = support_rules[-1]
+        self.assertRegex(support_rule.group(1), r'background(?:-image)?:[^;}]*(?:#0[0-9a-f]{5}|#1[0-9a-f]{5}|#2[0-9a-f]{5}|closing-sky)')
+        self.assertLess(HTML.index('id="faq"'), HTML.index('id="support"'))
+
 
 if __name__ == '__main__':
     unittest.main()
