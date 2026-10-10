@@ -14,6 +14,7 @@
   <title>把微光带进共和小学｜微光计划</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2323463a'/%3E%3Cpath d='M13 47 32 14l19 33H13Z' fill='%23e6bd7c'/%3E%3Ccircle cx='32' cy='38' r='6' fill='%2323463a'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="styles.css?v=gonghe-schedule-visit-anchor-close-20261010">
+  <link rel="stylesheet" href="support-stars.css?v=shared-sky-20261010">
 </head>
 <body>
   <a class="skip-link" href="#main">跳到正文</a>
@@ -167,12 +168,38 @@
       <div class="support-intro"><div><h2 id="support-title">如果你愿意，<br><em>可以从这里加入。</em></h2></div><p>善款接收主体和正式渠道还在了解中。你可以先联系团队表达意向；我们会在学校需求和合规接收方式确认后再发布具体信息。</p></div>
       <div class="support-paths" role="group" aria-label="选择参与支持方式"><button type="button" class="support-path is-selected" data-support-path="volunteer" aria-pressed="true"><span>01</span><b>志愿服务</b><i>↗</i></button><button type="button" class="support-path" data-support-path="materials" aria-pressed="false"><span>02</span><b>物资支持</b><i>↗</i></button><button type="button" class="support-path" data-support-path="donation-info" aria-pressed="false"><span>03</span><b>了解正式捐赠</b><i>↗</i></button></div>
       <div class="support-response" aria-live="polite"><p data-support-copy="volunteer"><b>志愿服务</b>　请邮件说明可参与时间、擅长内容与联系方式。团队会在学校确认参与方式后回复。</p><p data-support-copy="materials" hidden><b>物资支持</b>　物资清单尚待学校确认。请先联系团队登记意向，暂不寄送，以免品类不符或重复。</p><p data-support-copy="donation-info" hidden><b>正式捐赠</b>　尚未确定合适的募款主体和官方接收渠道。本网站目前不收款、不生成捐赠订单；确认后会公开渠道与使用记录。</p></div>
+      <div class="support-stars-entry"><p><b>把一句心意，留在共享星空。</b><span>点亮一颗象征同行的星，不涉及付款或物资交付。</span></p><button class="button button-stars" type="button" data-support-stars-open aria-haspopup="dialog">进入微光星空 <span>↗</span></button></div>
       <div class="support-bottom"><div class="contact-card"><span>CONTACT / WEIGUANG TEAM</span><a href="mailto:junlinkun@icloud.com?subject=%E5%85%B1%E5%92%8C%E5%B0%8F%E5%AD%A6%E6%94%AF%E6%95%99%E8%A1%8C%E5%8A%A8">junlinkun@icloud.com ↗</a><a href="tel:13923626543">139 2362 6543 ↗</a><small>联系团队了解筹备进度与参与方式</small></div><div class="support-notice"><span class="notice-dot"></span><p><b>当前状态：不收款</b><br>正式募款主体与微信支付商户渠道尚未确定。本页只提供联系入口，不展示二维码或付款按钮。</p></div></div>
 
       <div class="closing-message" aria-labelledby="closing-title"><h2 id="closing-title" aria-label="世界因你我更美好"><span class="closing-char" style="--letter-index:0" aria-hidden="true">世</span><span class="closing-char" style="--letter-index:1" aria-hidden="true">界</span><span class="closing-char" style="--letter-index:2" aria-hidden="true">因</span><span class="closing-char" style="--letter-index:3" aria-hidden="true">你</span><span class="closing-char" style="--letter-index:4" aria-hidden="true">我</span><span class="closing-char" style="--letter-index:5" aria-hidden="true">更</span><span class="closing-char" style="--letter-index:6" aria-hidden="true">美</span><span class="closing-char" style="--letter-index:7" aria-hidden="true">好</span></h2><p>Together, we make the world a better place.</p></div>
       <p class="support-image-credit">天空氛围图：<a href="https://unsplash.com/photos/a-clear-blue-sky-with-fluffy-white-clouds-hCi_sBoZmLE" target="_blank" rel="noopener noreferrer">Muhammet Cengiz / Unsplash</a> · 非共和村实景 · <a href="https://unsplash.com/license" target="_blank" rel="noopener noreferrer">Unsplash License</a></p>
     </section>
   </main>
+
+  <dialog class="support-stars-dialog" id="support-stars-dialog" aria-labelledby="support-stars-title" aria-describedby="support-stars-intro">
+    <div class="support-stars-shell">
+      <header class="support-stars-header"><div><p class="support-stars-kicker">A SHARED SKY / 线上同行</p><h2 id="support-stars-title">把心意，点成一颗星。</h2><p id="support-stars-intro">选择一个关注方向，留下一句话。每一颗星都是线上支持的象征，不是捐款记录。</p></div><button class="support-stars-close" type="button" data-support-stars-close aria-label="关闭共享星空">×</button></header>
+      <div class="support-stars-layout">
+        <section class="support-stars-view" aria-label="共享星空">
+          <div class="support-stars-scene"><canvas id="support-stars-canvas" aria-label="共享星空中的微光；选择下方星星可阅读留言"></canvas><div class="support-stars-count"><strong id="support-stars-count">—</strong><span>颗共享微光</span></div><div class="support-stars-status" id="support-stars-status" role="status" aria-live="polite">正在准备共享星空…</div></div>
+          <div class="support-stars-selected" id="support-stars-selected" aria-live="polite"><span>选中一颗星，读读留下的话</span></div>
+          <ol class="support-stars-list" id="support-stars-list" aria-label="最近点亮的共享星星"></ol>
+        </section>
+        <form class="support-star-form" id="support-star-form">
+          <p class="support-stars-form-label">01 / 选择一份同行心意</p>
+          <div class="support-star-types" role="group" aria-label="选择支持方向"><button type="button" data-support-type="特色课程" aria-pressed="true">特色课程</button><button type="button" data-support-type="家庭走访" aria-pressed="false">家庭走访</button><button type="button" data-support-type="物资准备" aria-pressed="false">物资准备</button></div>
+          <label class="support-stars-form-label" for="support-star-message">02 / 写下一句话</label>
+          <textarea id="support-star-message" name="message" maxlength="120" rows="3" required aria-describedby="support-star-public-note support-star-message-help support-star-message-count" placeholder="愿每一次认真准备，都成为孩子们记得的课堂。"></textarea>
+          <div class="support-star-message-meta"><span id="support-star-message-help">最多 60 个 Unicode 字符</span><span id="support-star-message-count" data-message-count aria-live="polite">0 / 60 字</span></div>
+          <p class="support-star-public-note" id="support-star-public-note">点亮后，<b>星星和留言会公开显示</b>在共享星空；这只表达线上支持意向，不代表捐款或物资已经送达。不要填写真实姓名、联系方式、住址或儿童可识别信息。</p>
+          <label class="support-star-confirm"><input type="checkbox" id="support-star-public-confirm" required><span>我已了解这句话会公开展示，并确认没有填写个人或儿童可识别信息。</span></label>
+          <button class="button button-stars button-stars-submit" id="support-star-submit" type="submit">确认公开并点亮 <span>✦</span></button>
+          <p class="support-star-form-status" id="support-star-form-status" role="status" aria-live="polite" aria-atomic="true"></p>
+        </form>
+      </div>
+      <p class="support-stars-footnote">星星互动仅用于表达线上支持，不收款、不生成捐赠订单。留言对所有访问者可见。</p>
+    </div>
+  </dialog>
 
   <footer class="site-footer"><a class="footer-mark" href="#top">WEIGUANG <span>微光计划</span></a><p>惠东县白盆珠镇共和村 · 共和小学支教行动</p><div class="footer-actions"><button type="button" id="share-site">分享行动 ↗</button><a href="#top">回到顶部 ↑</a></div><small>学校与人数信息已获校方确认，执行日期待公布 · 最近更新 2026.10.10</small></footer>
   <div class="toast" role="status" aria-live="polite" aria-atomic="true"></div>

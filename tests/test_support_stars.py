@@ -6,6 +6,8 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 SQL_PATH = ROOT / 'supabase' / 'support_stars.sql'
 CONFIG_PATH = ROOT / 'supabase-config.js'
+HTML_PATH = ROOT / 'index.html'
+CSS_PATH = ROOT / 'support-stars.css'
 
 
 class SupportStarSchemaTests(unittest.TestCase):
@@ -42,6 +44,34 @@ class SupportStarSchemaTests(unittest.TestCase):
         self.assertIn('publishableKey', config)
         self.assertIn('sb_publishable_', config)
         self.assertNotRegex(config, r'(?im)^\s*(?:service[_ -]?role|secret|private[_ -]?key)\s*[:=]')
+
+    def test_support_dialog_discloses_public_message_and_confirmation(self):
+        html = HTML_PATH.read_text()
+        self.assertIn('data-support-stars-open', html)
+        self.assertRegex(html, r'<dialog\b[^>]*id="support-stars-dialog"[^>]*aria-labelledby=')
+        self.assertEqual(len(re.findall(r'data-support-type=', html)), 3)
+        self.assertRegex(html, r'<textarea\b[^>]*id="support-star-message"[^>]*maxlength="120"')
+        self.assertIn('data-message-count', html)
+        self.assertIn('60 个 Unicode 字符', html)
+        self.assertRegex(html, r'<input\b[^>]*type="checkbox"[^>]*id="support-star-public-confirm"[^>]*required')
+        self.assertIn('星星和留言会公开显示', html)
+        self.assertIn('不代表捐款或物资已经送达', html)
+        self.assertIn('不要填写真实姓名、联系方式、住址或儿童可识别信息', html)
+        self.assertRegex(html, r'role="status"[^>]*aria-live="polite"')
+        dialog = html[html.index('<dialog'):html.index('</dialog>') + len('</dialog>')]
+        self.assertNotRegex(dialog, r'<input\b[^>]*type="number"')
+        self.assertNotRegex(dialog, r'<button\b[^>]*>[^<]*(?:支付|付款|生成.*?订单)')
+
+    def test_support_dialog_has_keyboard_and_reduced_motion_support(self):
+        html = HTML_PATH.read_text()
+        self.assertTrue(CSS_PATH.is_file(), 'the star dialog stylesheet must exist')
+        css = CSS_PATH.read_text()
+        self.assertRegex(html, r'<dialog\b[^>]*id="support-stars-dialog"[^>]*aria-describedby=')
+        self.assertRegex(html, r'<button\b[^>]*data-support-stars-close[^>]*>')
+        self.assertIn('data-support-stars-open', html)
+        self.assertRegex(css, r'@media\s*\(prefers-reduced-motion:\s*reduce\)')
+        self.assertRegex(css, r'@media\s*\(max-width:\s*760px\)')
+        self.assertIn('.support-stars-dialog::backdrop', css)
 
 
 if __name__ == '__main__':
