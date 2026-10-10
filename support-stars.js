@@ -20,6 +20,29 @@
     if (element) element.textContent = String(value ?? '');
   }
 
+  function mergeSnapshotEvents(snapshot, events) {
+    const inserted = new Map();
+    const deletedIds = new Set();
+    (Array.isArray(events) ? events : []).forEach((event) => {
+      if (event?.type === 'DELETE') {
+        const id = String(event.id ?? '');
+        if (!id) return;
+        deletedIds.add(id);
+        inserted.delete(id);
+        return;
+      }
+      if (event?.type !== 'INSERT' || !event.star || typeof event.star !== 'object') return;
+      const id = String(event.star.id ?? '');
+      const key = id || String(event.star.client_id ?? '');
+      if (!key) return;
+      if (id) deletedIds.delete(id);
+      inserted.set(key, event.star);
+    });
+    const rows = (Array.isArray(snapshot) ? snapshot : [])
+      .filter((star) => !deletedIds.has(String(star?.id ?? '')));
+    return { snapshot: rows, inserted: Array.from(inserted.values()) };
+  }
+
   function compareNewest(first, second) {
     return Date.parse(second.created_at) - Date.parse(first.created_at);
   }
@@ -32,6 +55,7 @@
     function normalizeStar(value, localOnly = false) {
       if (!value || typeof value !== 'object') return null;
       const star = {
+        id: String(value.id ?? ''),
         client_id: String(value.client_id ?? ''),
         support_type: String(value.support_type ?? ''),
         message: String(value.message ?? ''),
@@ -60,9 +84,17 @@
       addShared(value) {
         const star = normalizeStar(value);
         if (!star) return false;
+        if (!star.id) star.id = shared.get(star.client_id)?.id || '';
         local.delete(star.client_id);
         shared.set(star.client_id, star);
         trimToLimit(shared);
+        return true;
+      },
+      removeSharedById(id) {
+        const key = String(id ?? '');
+        const entry = Array.from(shared.entries()).find(([, star]) => star.id && star.id === key);
+        if (!entry) return false;
+        shared.delete(entry[0]);
         return true;
       },
       replaceShared(values, keep = []) {
@@ -97,6 +129,7 @@
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
       createStarStore,
+      mergeSnapshotEvents,
       recordLocalFallback,
       validateSupportMessage,
       writePlainText,
@@ -138,10 +171,10 @@
   let realtimeConnected = false;
   let animationFrame = 0;
   let isSubmitting = false;
-  let lastSnapshotAt = 0;
   let snapshotRequestId = 0;
   let realtimeSequence = 0;
-  const recentRealtimeRows = [];
+  const recentRealtimeEvents = [];
+  const activeSnapshotStarts = new Map();
   const context = canvas?.getContext('2d');
   const ambientStars = Array.from({ length: 88 }, (_, index) => {
     const seed = (number) => Math.abs(Math.sin((index + 1) * number) * 43758.5453) % 1;
@@ -362,8 +395,26 @@
 
   function rememberRealtimeStar(star) {
     realtimeSequence += 1;
-    recentRealtimeRows.push({ sequence: realtimeSequence, star });
-    if (recentRealtimeRows.length > DEFAULT_STAR_LIMIT * 2) recentRealtimeRows.shift();
+    recentRealtimeEvents.push({ sequence: realtimeSequence, type: 'INSERT', star });
+    pruneRealtimeEvents();
+  }
+
+  function rememberRealtimeDelete(id) {
+    const rowId = String(id ?? '');
+    if (!rowId) return;
+    realtimeSequence += 1;
+    recentRealtimeEvents.push({ sequence: realtimeSequence, type: 'DELETE', id: rowId });
+    pruneRealtimeEvents();
+  }
+
+  function pruneRealtimeEvents() {
+    const activeStarts = Array.from(activeSnapshotStarts.values());
+    if (activeStarts.length === 0) {
+      recentRealtimeEvents.length = 0;
+      return;
+    }
+    const earliestNeededSequence = Math.min(...activeStarts);
+    while (recentRealtimeEvents[0]?.sequence <= earliestNeededSequence) recentRealtimeEvents.shift();
   }
 
   function resetSelectionWhenMissing() {
@@ -379,26 +430,28 @@
     if (!dbClient) return;
     const requestId = ++snapshotRequestId;
     const sequenceAtStart = realtimeSequence;
+    activeSnapshotStarts.set(requestId, sequenceAtStart);
     try {
       const { data, error } = await dbClient
         .from('support_stars')
-        .select('client_id,support_type,message,x,y,created_at')
+        .select('id,client_id,support_type,message,x,y,created_at')
         .order('created_at', { ascending: false })
         .limit(DEFAULT_STAR_LIMIT);
       if (error) throw error;
       if (requestId !== snapshotRequestId) return;
-      const receivedWhileLoading = recentRealtimeRows
-        .filter((event) => event.sequence > sequenceAtStart)
-        .map((event) => event.star);
-      store.replaceShared(data || [], receivedWhileLoading);
+      const eventsDuringSnapshot = recentRealtimeEvents.filter((event) => event.sequence > sequenceAtStart);
+      const merged = mergeSnapshotEvents(data || [], eventsDuringSnapshot);
+      store.replaceShared(merged.snapshot, merged.inserted);
       resetSelectionWhenMissing();
-      lastSnapshotAt = Date.now();
       refreshCountAndStars();
       setSharedStatus(`已读取 ${store.sharedCount()} 颗共享微光。留言均为访客公开发布。`);
       persistLocalStars();
     } catch (_) {
       if (requestId !== snapshotRequestId) return;
       setSharedStatus(`${LOCAL_ONLY_STATUS}。共享数据暂时无法读取。`);
+    } finally {
+      activeSnapshotStarts.delete(requestId);
+      pruneRealtimeEvents();
     }
   }
 
@@ -411,7 +464,6 @@
       return;
     }
     setSharedStatus('正在连接共享星空…');
-    loadSharedSnapshot();
     realtimeChannel = dbClient
       .channel('support-stars-public-wall')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'support_stars' }, (payload) => {
@@ -425,11 +477,19 @@
           setFormStatus('这颗星已确认同步到共享星空。');
         }
       })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'support_stars' }, (payload) => {
+        const rowId = String(payload.old?.id ?? '');
+        if (!rowId) return;
+        rememberRealtimeDelete(rowId);
+        if (!store.removeSharedById(rowId)) return;
+        resetSelectionWhenMissing();
+        refreshCountAndStars();
+        persistLocalStars();
+      })
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           realtimeConnected = true;
-          if (Date.now() - lastSnapshotAt > 15000) loadSharedSnapshot();
-          else setSharedStatus(`已连接共享星空 · ${store.sharedCount()} 颗微光`);
+          loadSharedSnapshot();
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
           realtimeConnected = false;
           setSharedStatus('共享星空的实时连接暂时中断，稍后会自动重试。');
@@ -519,7 +579,7 @@
           x: star.x,
           y: star.y,
         })
-        .select('client_id,support_type,message,x,y,created_at')
+        .select('id,client_id,support_type,message,x,y,created_at')
         .single();
       if (error || !data) throw error || new Error('empty shared star response');
       await flight;

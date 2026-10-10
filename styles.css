@@ -34,7 +34,7 @@
 
 /* Keep the support area in the original palette; reserve blue for the closing animation. */
 .support{overflow:hidden;background:#e8e7da;color:var(--ink)}
-.closing-message{position:relative;isolation:isolate;overflow:hidden;max-width:none;width:100vw;margin:clamp(52px,8vw,108px) 0 0 calc(50% - 50vw);padding:clamp(48px,7vw,82px) max(4vw,24px) clamp(42px,6vw,68px);border:0;background:#0d3152 linear-gradient(180deg,rgba(8,37,64,.74),rgba(8,31,53,.93)),url("assets/closing-sky.jpg") center 48%/cover no-repeat;color:#fbf8f1;text-align:center}
+.closing-message{position:relative;isolation:isolate;overflow:hidden;max-width:none;width:100vw;margin:clamp(52px,8vw,108px) 0 0 calc(50% - 50vw);padding:clamp(48px,7vw,82px) max(4vw,24px) clamp(42px,6vw,68px);border:0;background-color:#0d3152;background-image:linear-gradient(180deg,rgba(8,37,64,.74),rgba(8,31,53,.93)),url("assets/closing-sky.jpg");background-position:center,center 48%;background-size:cover;background-repeat:no-repeat;color:#fbf8f1;text-align:center}
 .closing-message::before{content:"";position:absolute;z-index:0;inset:-12%;pointer-events:none;opacity:.25;background:radial-gradient(ellipse at 50% 0%,rgba(151,211,255,.82),transparent 58%);transform:scale(.82)}
 .closing-message>*{position:relative;z-index:1}
 .closing-message h2{font:600 clamp(32px,5vw,62px)/1.35 var(--serif);letter-spacing:.035em;margin:0;color:#fff!important;text-shadow:0 3px 24px rgba(1,12,22,.58)}

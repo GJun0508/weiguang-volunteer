@@ -116,7 +116,9 @@ class SiteTests(unittest.TestCase):
         self.assertNotIn('closing-sky', support_rule)
         closing_rules = list(re.finditer(r'\.closing-message\s*\{([^}]*)\}', CSS))
         self.assertTrue(closing_rules)
-        self.assertTrue(any('closing-sky' in rule.group(1) for rule in closing_rules))
+        closing_background = next((rule.group(1) for rule in closing_rules if 'closing-sky' in rule.group(1)), '')
+        self.assertIn('background-color:#0d3152', closing_background)
+        self.assertIn('background-image:', closing_background)
         self.assertNotIn('.support::before', CSS)
         self.assertLess(HTML.index('id="faq"'), HTML.index('id="support"'))
 

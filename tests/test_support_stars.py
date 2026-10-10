@@ -89,18 +89,20 @@ class SupportStarSchemaTests(unittest.TestCase):
         self.assertRegex(css, r'@media\s*\(max-width:\s*760px\)')
         self.assertIn('.support-stars-dialog::backdrop', css)
 
-    def test_support_dialog_uses_original_site_paper_and_forest_palette(self):
+    def test_support_dialog_uses_original_fullscreen_starfield_style(self):
         self.assertTrue(CSS_PATH.is_file(), 'the star dialog stylesheet must exist')
         css = CSS_PATH.read_text()
-        self.assertRegex(css, r'background:\s*var\(--paper-bright\)')
-        self.assertRegex(css, r'color:\s*var\(--ink\)')
-        self.assertIn('var(--forest)', css)
-        self.assertNotIn('background:#0e2940', css)
-        self.assertNotIn('background:linear-gradient(145deg,rgba(17,49,74', css)
-        self.assertRegex(css, r'\.support-stars-entry\s+p\s+b\s*\{[^}]*color:\s*var\(--forest\)')
-        self.assertRegex(css, r'\.button-stars\s*\{[^}]*background:\s*var\(--forest\)')
-        self.assertRegex(css, r'\.support-stars-scene\s*\{')
+        self.assertRegex(css, r'\.support-stars-dialog\s*\{[^}]*width:\s*100vw')
+        self.assertRegex(css, r'\.support-stars-dialog\s*\{[^}]*background:\s*#090b0f')
+        self.assertRegex(css, r'\.support-stars-shell\s*\{[^}]*grid-template-columns:\s*minmax\(360px,\s*440px\)\s+minmax\(0,\s*1fr\)')
+        self.assertRegex(css, r'\.support-star-form\s*\{[^}]*background:\s*rgba\(10,\s*12,\s*15,\s*\.7\)')
+        self.assertIn('backdrop-filter: blur(18px)', css)
         self.assertIn('url("assets/night-sky.jpg")', css)
+        self.assertRegex(css, r'\.support-stars-selected\s*\{[^}]*grid-row:\s*2')
+        self.assertRegex(css, r'\.support-stars-list\s*\{[^}]*grid-row:\s*3')
+        self.assertRegex(css, r'\.support-star-types button\[aria-pressed="true"\][^{]*\{[^}]*background:\s*#d8ff38')
+        self.assertRegex(css, r'\.button-stars-submit\s*\{[^}]*background:\s*#d8ff38')
+        self.assertNotRegex(css, r'\.support-stars-dialog\s*\{[^}]*background:\s*var\(--paper-bright\)')
 
     def test_opening_dialog_does_not_scroll_to_the_message_field(self):
         script = SCRIPT_PATH.read_text()
@@ -159,6 +161,29 @@ class SupportStarSchemaTests(unittest.TestCase):
     def test_fresh_snapshot_removes_deleted_rows_and_keeps_inflight_realtime_rows(self):
         result = self.run_node_json("(() => { const store = core.createStarStore(); const old = { client_id: '9af1ee1b-41d4-4c77-92f9-500c79d12b58', support_type: '家庭走访', message: '旧留言', x: 42, y: 35, created_at: '2026-10-10T01:00:00Z' }; const concurrent = { client_id: '3bf1ee1b-41d4-4c77-92f9-500c79d12b58', support_type: '特色课程', message: '新留言', x: 50, y: 40, created_at: '2026-10-10T02:00:00Z' }; store.addShared(old); store.replaceShared([], [concurrent]); return store.sharedStars().map((star) => star.message); })()")
         self.assertEqual(result, ['新留言'])
+
+    def test_realtime_delete_removes_star_by_database_id(self):
+        result = self.run_node_json("(() => { const store = core.createStarStore(); const row = { id: 'row-1', client_id: '9af1ee1b-41d4-4c77-92f9-500c79d12b58', support_type: '家庭走访', message: '公开留言', x: 42, y: 35, created_at: '2026-10-10T01:00:00Z' }; store.addShared(row); const removed = store.removeSharedById('row-1'); return { removed, count: store.sharedCount() }; })()")
+        self.assertEqual(result, {'removed': True, 'count': 0})
+
+    def test_snapshot_merge_applies_deletes_and_inserts_received_during_fetch(self):
+        result = self.run_node_json("(() => { const stale = { id: 'row-1', client_id: '9af1ee1b-41d4-4c77-92f9-500c79d12b58', support_type: '家庭走访', message: '删除前的留言', x: 42, y: 35, created_at: '2026-10-10T01:00:00Z' }; const inserted = { id: 'row-2', client_id: '3bf1ee1b-41d4-4c77-92f9-500c79d12b58', support_type: '特色课程', message: '读取期间的新留言', x: 50, y: 40, created_at: '2026-10-10T02:00:00Z' }; const result = core.mergeSnapshotEvents([stale], [{ type: 'DELETE', id: 'row-1' }, { type: 'INSERT', star: inserted }]); return { snapshot: result.snapshot.map((star) => star.id), inserted: result.inserted.map((star) => star.id) }; })()")
+        self.assertEqual(result, {'snapshot': [], 'inserted': ['row-2']})
+
+    def test_delete_after_insert_in_same_snapshot_window_wins(self):
+        result = self.run_node_json("(() => { const inserted = { id: 'row-1', client_id: '9af1ee1b-41d4-4c77-92f9-500c79d12b58', support_type: '家庭走访', message: '随后被删除', x: 42, y: 35, created_at: '2026-10-10T01:00:00Z' }; return core.mergeSnapshotEvents([], [{ type: 'INSERT', star: inserted }, { type: 'DELETE', id: 'row-1' }]).inserted.length; })()")
+        self.assertEqual(result, 0)
+
+    def test_realtime_snapshot_load_starts_after_subscription_is_registered(self):
+        script = SCRIPT_PATH.read_text()
+        start = script[script.index('function startSharedConnection()'):script.index('async function stopSharedConnection()')]
+        subscribe_at = start.index('.subscribe(')
+        self.assertGreater(start.index('loadSharedSnapshot()', subscribe_at), subscribe_at)
+        self.assertNotIn('loadSharedSnapshot();\n    realtimeChannel', start)
+        self.assertIn("event: 'DELETE'", start)
+        self.assertIn('activeSnapshotStarts.set(requestId, sequenceAtStart)', script)
+        self.assertIn('const earliestNeededSequence = Math.min(...activeStarts)', script)
+        self.assertIn('while (recentRealtimeEvents[0]?.sequence <= earliestNeededSequence)', script)
 
 
 if __name__ == '__main__':
