@@ -92,9 +92,12 @@ class SupportStarSchemaTests(unittest.TestCase):
     def test_support_dialog_uses_original_fullscreen_starfield_style(self):
         self.assertTrue(CSS_PATH.is_file(), 'the star dialog stylesheet must exist')
         css = CSS_PATH.read_text()
+        script = SCRIPT_PATH.read_text()
+        shell = css[css.index('.support-stars-shell {'):css.index('.support-stars-header {')]
         self.assertRegex(css, r'\.support-stars-dialog\s*\{[^}]*width:\s*100vw')
         self.assertRegex(css, r'\.support-stars-dialog\s*\{[^}]*background:\s*#090b0f')
         self.assertRegex(css, r'\.support-stars-shell\s*\{[^}]*grid-template-columns:\s*minmax\(360px,\s*440px\)\s+minmax\(0,\s*1fr\)')
+        self.assertIn('url("assets/night-sky.jpg")', shell)
         self.assertRegex(css, r'\.support-star-form\s*\{[^}]*background:\s*rgba\(10,\s*12,\s*15,\s*\.7\)')
         self.assertIn('backdrop-filter: blur(18px)', css)
         self.assertIn('url("assets/night-sky.jpg")', css)
@@ -103,6 +106,17 @@ class SupportStarSchemaTests(unittest.TestCase):
         self.assertRegex(css, r'\.support-star-types button\[aria-pressed="true"\][^{]*\{[^}]*background:\s*#d8ff38')
         self.assertRegex(css, r'\.button-stars-submit\s*\{[^}]*background:\s*#d8ff38')
         self.assertNotRegex(css, r'\.support-stars-dialog\s*\{[^}]*background:\s*var\(--paper-bright\)')
+        self.assertRegex(css, r'\.support-star-form textarea\s*\{[^}]*background:\s*transparent')
+
+        draw_star = script[script.index('function drawOneStar('):script.index('function drawCanvas(')]
+        self.assertIn('context.rotate(Math.PI / 4)', draw_star)
+        self.assertIn("context.shadowColor = '#ffffff'", draw_star)
+        self.assertIn("context.fillStyle = '#ffffff'", draw_star)
+        self.assertIn('context.fillRect(-radius, -radius, radius * 2, radius * 2)', draw_star)
+        self.assertNotIn('rgba(255, 229, 164', draw_star)
+        self.assertNotIn('rgba(173, 220, 255', draw_star)
+        self.assertIn('.support-star-flight::before', css)
+        self.assertIn('rotate(45deg)', css)
 
     def test_opening_dialog_does_not_scroll_to_the_message_field(self):
         script = SCRIPT_PATH.read_text()

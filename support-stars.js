@@ -254,37 +254,18 @@
     });
   }
 
-  function drawOneStar(star, width, height, time) {
+  function drawOneStar(star, width, height) {
     const x = (star.x / 100) * width;
     const y = (star.y / 100) * height;
     const selected = star.client_id === selectedClientId || star.client_id === hoveredClientId;
-    const pulse = reducedMotion?.matches ? 0.88 : 0.73 + (Math.sin(time / 950 + x * 0.013 + y * 0.021) + 1) * 0.12;
-    const radius = selected ? 2.8 : 1.8;
-    const glow = context.createRadialGradient(x, y, 0, x, y, selected ? 18 : 11);
-    if (star.localOnly) {
-      glow.addColorStop(0, `rgba(173, 220, 255, ${pulse})`);
-      glow.addColorStop(1, 'rgba(173, 220, 255, 0)');
-    } else {
-      glow.addColorStop(0, `rgba(255, 229, 164, ${pulse})`);
-      glow.addColorStop(1, 'rgba(255, 229, 164, 0)');
-    }
+    const radius = selected ? 4.3 : 3.1;
     context.save();
-    context.globalAlpha = pulse;
-    context.fillStyle = glow;
-    context.beginPath();
-    context.arc(x, y, selected ? 18 : 11, 0, Math.PI * 2);
-    context.fill();
-    context.fillStyle = star.localOnly ? '#bfe5ff' : '#ffe9b0';
-    context.beginPath();
-    context.arc(x, y, radius, 0, Math.PI * 2);
-    context.fill();
-    if (selected) {
-      context.strokeStyle = star.localOnly ? 'rgba(191,229,255,.76)' : 'rgba(255,233,176,.76)';
-      context.lineWidth = 1;
-      context.beginPath();
-      context.arc(x, y, 8, 0, Math.PI * 2);
-      context.stroke();
-    }
+    context.translate(x, y);
+    context.rotate(Math.PI / 4);
+    context.shadowBlur = selected ? 28 : 18;
+    context.shadowColor = '#ffffff';
+    context.fillStyle = '#ffffff';
+    context.fillRect(-radius, -radius, radius * 2, radius * 2);
     context.restore();
   }
 
@@ -302,7 +283,7 @@
       context.arc((star.x / 100) * width, (star.y / 100) * height, star.radius, 0, Math.PI * 2);
       context.fill();
     });
-    allVisibleStars().forEach((star) => drawOneStar(star, width, height, time));
+    allVisibleStars().forEach((star) => drawOneStar(star, width, height));
   }
 
   function drawLoop(time) {
@@ -519,7 +500,6 @@
     const flight = document.createElement('span');
     flight.className = 'support-star-flight';
     flight.setAttribute('aria-hidden', 'true');
-    writePlainText(flight, '✦');
     flight.style.left = `${origin.left + origin.width / 2 - shellBounds.left}px`;
     flight.style.top = `${origin.top + origin.height / 2 - shellBounds.top}px`;
     shell.append(flight);

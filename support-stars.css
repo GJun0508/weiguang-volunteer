@@ -68,7 +68,11 @@
   height: 100%;
   padding: 0;
   overflow: hidden;
-  background: #090b0f;
+  background-color: #090b0f;
+  background-image: linear-gradient(90deg, rgba(5, 7, 10, .86) 0%, rgba(5, 7, 10, .38) 44%, rgba(5, 7, 10, .12) 68%, rgba(5, 7, 10, .48) 100%), linear-gradient(0deg, rgba(5, 7, 10, .72) 0%, transparent 50%), url("assets/night-sky.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   color: #f2f0eb;
 }
 .support-stars-header {
@@ -121,9 +125,8 @@
   inset: 0;
   overflow: hidden;
   border: 0;
-  background: #090b0f url("assets/night-sky.jpg") center/cover no-repeat;
+  background: transparent;
 }
-.support-stars-scene::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgba(5, 7, 10, .12), rgba(5, 7, 10, .35)), linear-gradient(0deg, rgba(5, 7, 10, .72), transparent 52%); }
 .support-stars-scene canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; cursor: crosshair; }
 .support-stars-count { position: absolute; z-index: 2; top: 28px; right: 32px; display: grid; color: #d8ff38; font: 10px var(--mono); text-shadow: 0 1px 9px #000; }
 .support-stars-count strong { font: 500 18px var(--mono); }
@@ -153,7 +156,7 @@
 .support-star-types button[aria-pressed="true"],
 .support-star-types button:hover { border-color: #d8ff38; background: #d8ff38; color: #101110; }
 .support-star-form > label.support-stars-form-label { display: block; margin: 0 0 8px; }
-.support-star-form textarea { box-sizing: border-box; display: block; width: 100%; min-height: 91px; resize: vertical; padding: 12px; border: 1px solid rgba(255, 255, 255, .24); border-radius: 0; background: rgba(255, 255, 255, .07); color: #fff; font: 13px/1.75 var(--sans); }
+.support-star-form textarea { box-sizing: border-box; display: block; width: 100%; min-height: 91px; resize: vertical; padding: 12px; border: 1px solid rgba(255, 255, 255, .24); border-radius: 0; background: transparent; color: #fff; font: 13px/1.75 var(--sans); }
 .support-star-form textarea::placeholder { color: rgba(255, 255, 255, .42); }
 .support-star-message-meta { display: flex; justify-content: space-between; gap: 12px; margin-top: 6px; color: rgba(255, 255, 255, .56); font-size: 10px; }
 .support-star-public-note { margin: 17px 0 12px; padding: 11px 12px; border-left: 2px solid #d8ff38; background: rgba(255, 255, 255, .08); color: rgba(255, 255, 255, .64); font-size: 10px; line-height: 1.8; }
@@ -164,7 +167,8 @@
 .button-stars-submit:hover { background: #edff9a; color: #101110; }
 .support-star-form-status { min-height: 19px; margin: 9px 0 0; color: #d8ff38; font-size: 10px; line-height: 1.8; }
 .support-stars-footnote { grid-column: 1; grid-row: 3; z-index: 2; margin: 0; padding: 8px 46px 20px; border-right: 1px solid rgba(255, 255, 255, .16); background: rgba(10, 12, 15, .7); color: rgba(255, 255, 255, .52); font-size: 9px; line-height: 1.65; backdrop-filter: blur(18px); }
-.support-star-flight { position: absolute; z-index: 5; pointer-events: none; color: #d8ff38; font: 600 26px/1 var(--sans); text-shadow: 0 0 18px rgba(216, 255, 56, .95), 0 0 34px rgba(255, 255, 255, .72); transform: translate(-50%, -50%); }
+.support-star-flight { position: absolute; z-index: 5; width: 0; height: 0; pointer-events: none; }
+.support-star-flight::before { content: ""; position: absolute; top: 0; left: 0; width: 8px; height: 8px; background: #fff; box-shadow: 0 0 18px rgba(255, 255, 255, .95), 0 0 34px rgba(255, 255, 255, .72); transform: translate(-50%, -50%) rotate(45deg); }
 
 @media (max-width: 760px) {
   .support-stars-entry { align-items: flex-start; flex-direction: column; }
