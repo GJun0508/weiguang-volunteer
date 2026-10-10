@@ -111,8 +111,13 @@ class SiteTests(unittest.TestCase):
         self.assertIn('--paper:#f6f1e9', CSS)
         support_rules = list(re.finditer(r'\.support\s*\{([^}]*)\}', CSS))
         self.assertTrue(support_rules)
-        support_rule = support_rules[-1]
-        self.assertRegex(support_rule.group(1), r'background(?:-image)?:[^;}]*(?:#0[0-9a-f]{5}|#1[0-9a-f]{5}|#2[0-9a-f]{5}|closing-sky)')
+        support_rule = support_rules[-1].group(1)
+        self.assertRegex(support_rule, r'background:\s*#e8e7da')
+        self.assertNotIn('closing-sky', support_rule)
+        closing_rules = list(re.finditer(r'\.closing-message\s*\{([^}]*)\}', CSS))
+        self.assertTrue(closing_rules)
+        self.assertTrue(any('closing-sky' in rule.group(1) for rule in closing_rules))
+        self.assertNotIn('.support::before', CSS)
         self.assertLess(HTML.index('id="faq"'), HTML.index('id="support"'))
 
 

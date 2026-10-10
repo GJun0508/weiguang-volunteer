@@ -49,7 +49,10 @@ class SupportStarSchemaTests(unittest.TestCase):
         declared = re.findall(r'^\s*([a-z_]+)\s+', columns.group(1), re.I | re.M)
         self.assertEqual(set(declared), {'id', 'client_id', 'support_type', 'message', 'x', 'y', 'created_at'})
         self.assertRegex(sql, r"support_type\s+in\s*\(\s*'特色课程'\s*,\s*'家庭走访'\s*,\s*'物资准备'\s*\)", re.I)
-        self.assertRegex(sql, r'char_length\s*\(\s*btrim\s*\(\s*message\s*\)\s*\)\s+between\s+1\s+and\s+60', re.I)
+        trim_check = r"char_length\s*\(\s*btrim\s*\(\s*message\s*,\s*U&'[^']+'\s*\)\s*\)\s+between\s+1\s+and\s+60"
+        self.assertGreaterEqual(len(re.findall(trim_check, sql, re.I)), 2)
+        for whitespace in (r'\00A0', r'\1680', r'\2000', r'\200A', r'\2028', r'\2029', r'\202F', r'\205F', r'\3000', r'\FEFF'):
+            self.assertIn(whitespace, sql)
         for coordinate in ('x', 'y'):
             self.assertRegex(sql, rf'\b{coordinate}\b[^,\n]*check|check\s*\([^)]*\b{coordinate}\b[^)]*between\s+0\s+and\s+100', re.I | re.S)
         config = CONFIG_PATH.read_text()
@@ -94,6 +97,8 @@ class SupportStarSchemaTests(unittest.TestCase):
         self.assertIn('var(--forest)', css)
         self.assertNotIn('background:#0e2940', css)
         self.assertNotIn('background:linear-gradient(145deg,rgba(17,49,74', css)
+        self.assertRegex(css, r'\.support-stars-entry\s+p\s+b\s*\{[^}]*color:\s*var\(--forest\)')
+        self.assertRegex(css, r'\.button-stars\s*\{[^}]*background:\s*var\(--forest\)')
         self.assertRegex(css, r'\.support-stars-scene\s*\{')
         self.assertIn('url("assets/night-sky.jpg")', css)
 
@@ -150,6 +155,10 @@ class SupportStarSchemaTests(unittest.TestCase):
     def test_shared_star_store_keeps_only_the_latest_eighty(self):
         result = self.run_node_json("(() => { const store = core.createStarStore(80); for (let i = 0; i < 85; i += 1) store.addShared({ client_id: `9af1ee1b-41d4-4c77-92f9-${String(i).padStart(12, '0')}`, support_type: '物资准备', message: String(i), x: 50, y: 50, created_at: new Date(Date.UTC(2026, 0, 1, 0, i)).toISOString() }); return { count: store.sharedCount(), oldest: store.sharedStars().at(-1).message, newest: store.sharedStars()[0].message }; })()")
         self.assertEqual(result, {'count': 80, 'oldest': '5', 'newest': '84'})
+
+    def test_fresh_snapshot_removes_deleted_rows_and_keeps_inflight_realtime_rows(self):
+        result = self.run_node_json("(() => { const store = core.createStarStore(); const old = { client_id: '9af1ee1b-41d4-4c77-92f9-500c79d12b58', support_type: '家庭走访', message: '旧留言', x: 42, y: 35, created_at: '2026-10-10T01:00:00Z' }; const concurrent = { client_id: '3bf1ee1b-41d4-4c77-92f9-500c79d12b58', support_type: '特色课程', message: '新留言', x: 50, y: 40, created_at: '2026-10-10T02:00:00Z' }; store.addShared(old); store.replaceShared([], [concurrent]); return store.sharedStars().map((star) => star.message); })()")
+        self.assertEqual(result, ['新留言'])
 
 
 if __name__ == '__main__':

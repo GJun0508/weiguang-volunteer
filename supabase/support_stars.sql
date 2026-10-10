@@ -9,7 +9,7 @@ create table if not exists public.support_stars (
     support_type in ('特色课程', '家庭走访', '物资准备')
   ),
   message text not null check (
-    char_length(btrim(message)) between 1 and 60
+    char_length(btrim(message, U&'\0009\000A\000B\000C\000D\0020\00A0\1680\2000\2001\2002\2003\2004\2005\2006\2007\2008\2009\200A\2028\2029\202F\205F\3000\FEFF')) between 1 and 60
   ),
   x numeric(5, 2) not null check (x between 0 and 100),
   y numeric(5, 2) not null check (y between 0 and 100),
@@ -37,7 +37,7 @@ create policy support_stars_public_insert
   to anon
   with check (
     support_type in ('特色课程', '家庭走访', '物资准备')
-    and char_length(btrim(message)) between 1 and 60
+    and char_length(btrim(message, U&'\0009\000A\000B\000C\000D\0020\00A0\1680\2000\2001\2002\2003\2004\2005\2006\2007\2008\2009\200A\2028\2029\202F\205F\3000\FEFF')) between 1 and 60
     and x between 0 and 100
     and y between 0 and 100
   );

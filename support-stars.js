@@ -65,6 +65,11 @@
         trimToLimit(shared);
         return true;
       },
+      replaceShared(values, keep = []) {
+        shared.clear();
+        [...(Array.isArray(values) ? values : []), ...(Array.isArray(keep) ? keep : [])]
+          .forEach((star) => this.addShared(star));
+      },
       addLocal(value) {
         const star = normalizeStar(value, true);
         if (!star || shared.has(star.client_id)) return false;
@@ -134,6 +139,9 @@
   let animationFrame = 0;
   let isSubmitting = false;
   let lastSnapshotAt = 0;
+  let snapshotRequestId = 0;
+  let realtimeSequence = 0;
+  const recentRealtimeRows = [];
   const context = canvas?.getContext('2d');
   const ambientStars = Array.from({ length: 88 }, (_, index) => {
     const seed = (number) => Math.abs(Math.sin((index + 1) * number) * 43758.5453) % 1;
@@ -352,8 +360,25 @@
     drawCanvas();
   }
 
+  function rememberRealtimeStar(star) {
+    realtimeSequence += 1;
+    recentRealtimeRows.push({ sequence: realtimeSequence, star });
+    if (recentRealtimeRows.length > DEFAULT_STAR_LIMIT * 2) recentRealtimeRows.shift();
+  }
+
+  function resetSelectionWhenMissing() {
+    if (!selectedClientId || allVisibleStars().some((star) => star.client_id === selectedClientId)) return;
+    selectedClientId = '';
+    if (!selectedPanel) return;
+    const hint = document.createElement('span');
+    writePlainText(hint, '选中一颗星，读读留下的话');
+    selectedPanel.replaceChildren(hint);
+  }
+
   async function loadSharedSnapshot() {
     if (!dbClient) return;
+    const requestId = ++snapshotRequestId;
+    const sequenceAtStart = realtimeSequence;
     try {
       const { data, error } = await dbClient
         .from('support_stars')
@@ -361,12 +386,18 @@
         .order('created_at', { ascending: false })
         .limit(DEFAULT_STAR_LIMIT);
       if (error) throw error;
-      (data || []).forEach((star) => store.addShared(star));
+      if (requestId !== snapshotRequestId) return;
+      const receivedWhileLoading = recentRealtimeRows
+        .filter((event) => event.sequence > sequenceAtStart)
+        .map((event) => event.star);
+      store.replaceShared(data || [], receivedWhileLoading);
+      resetSelectionWhenMissing();
       lastSnapshotAt = Date.now();
       refreshCountAndStars();
       setSharedStatus(`已读取 ${store.sharedCount()} 颗共享微光。留言均为访客公开发布。`);
       persistLocalStars();
     } catch (_) {
+      if (requestId !== snapshotRequestId) return;
       setSharedStatus(`${LOCAL_ONLY_STATUS}。共享数据暂时无法读取。`);
     }
   }
@@ -386,6 +417,7 @@
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'support_stars' }, (payload) => {
         const wasLocal = store.localStars().some((star) => star.client_id === payload.new?.client_id);
         if (!store.addShared(payload.new)) return;
+        rememberRealtimeStar(payload.new);
         refreshCountAndStars();
         persistLocalStars();
         if (wasLocal) {
@@ -492,6 +524,7 @@
       if (error || !data) throw error || new Error('empty shared star response');
       await flight;
       store.addShared(data);
+      rememberRealtimeStar(data);
       renderSelectedStar(data);
       refreshCountAndStars();
       setSharedStatus(realtimeConnected ? '这颗星已经同步到共享星空。' : '这颗星已经写入共享星空；实时更新连接暂不可用。');

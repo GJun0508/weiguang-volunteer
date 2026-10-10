@@ -87,7 +87,7 @@
 - [x] **Step 1: 补上回归测试** `test_existing_site_and_no_payment_notice_remain`，确认学校内容、课表、五日行程、联系人和“不收款”状态仍存在，首页没有金额、支付、订单或收据控件。
 - [x] **Step 2: 实跑全部检查**：`python3 -m unittest discover -s tests -v`、`git diff --check`、`/Users/hanyun/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node --check support-stars.js`。预期所有单测通过、无语法错误和空白问题。
 - [x] **Step 3: 更新 README**：说明支持星空的匿名字段、留言公开规则、当前无强力反刷、管理员在 Supabase 后台删除不当留言，以及首次启用前须运行 SQL 迁移。
-- [ ] **Step 4: 应用 SQL 迁移并验证 Supabase select/insert/realtime**；迁移未成功前不得把页面状态显示为“全站共享正常”。
+- [x] **Step 4: 应用 SQL 迁移并验证 Supabase select/insert/realtime**；迁移未成功前不得把页面状态显示为“全站共享正常”。
 - [ ] **Step 5: 桌面与手机浏览器验收**：确认开关弹层、方向筛选、留言边界、公开确认、成功飞星、点击留言、实时新星、网络失败本机提示、键盘焦点与减少动态效果；确认现有课表和联系入口正常、无横向溢出。
 - [ ] **Step 6: 部署到已授权的 GitHub Pages 仓库，并检查公开页面的共享状态与浏览器控制台。**
 - [ ] **Step 7: 提交最终文档和验证记录**，提交信息 `docs: document support star operation`。
