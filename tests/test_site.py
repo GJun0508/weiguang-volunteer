@@ -94,6 +94,7 @@ class SiteTests(unittest.TestCase):
         self.assertIn('上午 3 节、下午 3 节', HTML)
         self.assertIn('周五下午', HTML)
         self.assertIn('周五下午 · 走访贫困家庭', HTML)
+        self.assertRegex(CSS, r'#schedule\{[^}]*scroll-margin-top:')
         for grade in ('四年级', '五年级', '六年级'):
             self.assertIn(grade, HTML)
         for course in ('科学课', '梦想课', '全球视野与思维拓展', '体育课', '美术课'):
