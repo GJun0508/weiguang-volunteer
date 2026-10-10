@@ -1,4 +1,14 @@
 (() => {
+  const navigation = performance.getEntriesByType('navigation')[0];
+  window.addEventListener('pageshow', event => {
+    if (location.hash || event.persisted || navigation?.type === 'back_forward') return;
+    const root = document.documentElement;
+    const previousBehavior = root.style.scrollBehavior;
+    root.style.scrollBehavior = 'auto';
+    window.scrollTo(0, 0);
+    root.style.scrollBehavior = previousBehavior;
+  }, { once: true });
+
   const toast = document.querySelector('.toast');
   let toastTimer;
 

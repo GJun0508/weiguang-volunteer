@@ -478,14 +478,18 @@
       });
   }
 
-  async function stopSharedConnection() {
-    connectionStarted = false;
-    realtimeConnected = false;
-    if (realtimeChannel && dbClient) {
-      const channel = realtimeChannel;
-      realtimeChannel = null;
-      try { await dbClient.removeChannel(channel); } catch (_) { /* the dialog can close even if cleanup fails */ }
+  function prewarmSharedConnection() {
+    const supportSection = document.querySelector('#support');
+    if (supportSection && 'IntersectionObserver' in window) {
+      const observer = new window.IntersectionObserver((entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        observer.disconnect();
+        startSharedConnection();
+      }, { rootMargin: '320px 0px', threshold: 0 });
+      observer.observe(supportSection);
     }
+    openButton?.addEventListener('pointerenter', startSharedConnection, { once: true });
+    openButton?.addEventListener('focus', startSharedConnection, { once: true });
   }
 
   function animateStarFlight(star) {
@@ -610,11 +614,11 @@
   updateMessageCount();
 
   openButton?.addEventListener('click', openDialog);
+  prewarmSharedConnection();
   closeButton?.addEventListener('click', closeDialog);
   dialog.addEventListener('close', () => {
     if (animationFrame) window.cancelAnimationFrame(animationFrame);
     animationFrame = 0;
-    stopSharedConnection();
     if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
   });
   dialog.addEventListener('click', (event) => {

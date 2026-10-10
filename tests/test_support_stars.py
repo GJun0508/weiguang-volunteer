@@ -190,7 +190,7 @@ class SupportStarSchemaTests(unittest.TestCase):
 
     def test_realtime_snapshot_load_starts_after_subscription_is_registered(self):
         script = SCRIPT_PATH.read_text()
-        start = script[script.index('function startSharedConnection()'):script.index('async function stopSharedConnection()')]
+        start = script[script.index('function startSharedConnection()'):script.index('function prewarmSharedConnection()')]
         subscribe_at = start.index('.subscribe(')
         self.assertGreater(start.index('loadSharedSnapshot()', subscribe_at), subscribe_at)
         self.assertNotIn('loadSharedSnapshot();\n    realtimeChannel', start)
@@ -198,6 +198,20 @@ class SupportStarSchemaTests(unittest.TestCase):
         self.assertIn('activeSnapshotStarts.set(requestId, sequenceAtStart)', script)
         self.assertIn('const earliestNeededSequence = Math.min(...activeStarts)', script)
         self.assertIn('while (recentRealtimeEvents[0]?.sequence <= earliestNeededSequence)', script)
+
+    def test_shared_stars_preload_before_dialog_opens_and_keep_realtime_channel(self):
+        script = SCRIPT_PATH.read_text()
+        self.assertIn('function prewarmSharedConnection()', script)
+        prewarm = script[script.index('function prewarmSharedConnection()'):script.index('function animateStarFlight(')]
+        self.assertIn("document.querySelector('#support')", prewarm)
+        self.assertIn('new window.IntersectionObserver', prewarm)
+        self.assertIn("rootMargin: '320px 0px'", prewarm)
+        self.assertIn('startSharedConnection()', prewarm)
+        self.assertIn("openButton?.addEventListener('pointerenter', startSharedConnection", prewarm)
+        initialization = script[script.index('loadLocalStars();'):script.index("closeButton?.addEventListener('click'")]
+        self.assertIn('prewarmSharedConnection();', initialization)
+        close_handler = script[script.index("dialog.addEventListener('close'"):script.index("dialog.addEventListener('click'")]
+        self.assertNotIn('stopSharedConnection()', close_handler)
 
 
 if __name__ == '__main__':
