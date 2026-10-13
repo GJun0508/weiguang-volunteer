@@ -147,6 +147,18 @@ class SupportStarSchemaTests(unittest.TestCase):
         self.assertIn('id="share-site"', html)
         self.assertIn('世界因你我更美好', html)
 
+    def test_support_contact_and_mobile_star_sky_keep_text_outside_the_canvas(self):
+        html = HTML_PATH.read_text()
+        css = CSS_PATH.read_text()
+        self.assertIn('微信：Junjun680277', html)
+        self.assertIn('</span></div></div>\n          <div class="support-stars-status"', html)
+        mobile = css[css.index('@media (max-width: 760px)'):css.index('@media (max-width: 360px)')]
+        self.assertRegex(mobile, r'\.support-stars-scene\s*\{[^}]*position:\s*relative')
+        self.assertRegex(mobile, r'\.support-stars-status\s*\{[^}]*position:\s*relative')
+        self.assertRegex(css, r'\.support-stars-count\s*\{[^}]*color:\s*#f2f0eb')
+        self.assertRegex(css, r'\.support-star-form-status\s*\{[^}]*color:\s*rgba\(255,\s*255,\s*255,\s*\.88\)')
+        self.assertNotRegex(css, r'(?:^|[\n;{]\s*)color:\s*#d8ff38')
+
     def test_support_message_is_rendered_as_plain_text(self):
         payload = '<img src=x onerror="alert(1)">'
         result = self.run_node_json(f"(() => {{ const target = {{ textContent: '' }}; core.writePlainText(target, {json.dumps(payload)}); return target.textContent; }})()")

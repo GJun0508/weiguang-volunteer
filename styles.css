@@ -57,4 +57,5 @@
 @media(prefers-reduced-motion:reduce){.closing-message::before,.support.is-visible .closing-message h2,.support.is-visible .closing-message p,.support.is-visible .closing-message h2 .closing-char{animation:none!important}.support[data-motion-ready="true"] .closing-message h2,.support[data-motion-ready="true"] .closing-message p,.support[data-motion-ready="true"] .closing-message h2 .closing-char{opacity:1!important;transform:none!important}.schedule-results.is-updating{animation:none!important}}
 
 /* Keep timetable anchor links clear of the fixed site header. */
+.contact-wechat{margin:3px 0;font-size:15px;font-weight:700;color:var(--forest)}
 #schedule{scroll-margin-top:82px}
